@@ -100,12 +100,29 @@ def draw_squares(tur):
         for y in range(-300, 350, 200):
             draw_square(tur, x - 50, y + 50, 100)
 
+def draw_squares_w_threading(tur, lock:threading.Lock):
+    """Draw a group of squares"""
+    
+    for x in range(-300, 350, 200):
+        for y in range(-300, 350, 200):
+            lock.acquire()
+            draw_square(tur, x - 50, y + 50, 100)
+            lock.release()
 
 def draw_circles(tur):
     """Draw a group of circles"""
     for x in range(-300, 350, 200):
         for y in range(-300, 350, 200):
             draw_circle(tur, x, y-2, 50)
+
+def draw_circles_w_threading(tur, lock:threading.Lock):
+    """Draw a group of circles"""
+    
+    for x in range(-300, 350, 200):
+        for y in range(-300, 350, 200):
+            lock.acquire()
+            draw_circle(tur, x, y-2, 50)
+            lock.release()   
 
 
 def draw_triangles(tur):
@@ -114,6 +131,14 @@ def draw_triangles(tur):
         for y in range(-300, 350, 200):
             draw_triangle(tur, x-30, y-30+10, 60)
 
+def draw_triangles_w_threading(tur, lock:threading.Lock):
+    """Draw a group of triangles"""
+    
+    for x in range(-300, 350, 200):
+        for y in range(-300, 350, 200):
+            lock.acquire()
+            draw_triangle(tur, x-30, y-30+10, 60)
+            lock.release()
 
 def draw_rectangles(tur):
     """Draw a group of Rectangles"""
@@ -121,7 +146,15 @@ def draw_rectangles(tur):
         for y in range(-300, 350, 200):
             draw_rectangle(tur, x-10, y+5, 20, 15)
 
-
+def draw_rectangles_w_threading(tur, lock:threading.Lock):
+    """Draw a group of Rectangles"""
+    
+    for x in range(-300, 350, 200):
+        for y in range(-300, 350, 200):
+            lock.acquire()
+            draw_rectangle(tur, x-10, y+5, 20, 15)
+            lock.release()
+    
 def run_no_threads(tur, log, main_turtle):
     """Draw different shapes without using threads"""
 
@@ -172,21 +205,27 @@ def run_with_threads(tur, log, main_turtle):
     # You need to use 4 threads where each thread concurrently drawing one type of shape.
     # You are free to change any functions in this code except main()
 
+    lockyLock = threading.Lock()
 
+    t1 = threading.Thread(target=draw_circles_w_threading, args=(tur,lockyLock))
+    t2 = threading.Thread(target=draw_rectangles_w_threading, args=(tur, lockyLock))
+    t3 = threading.Thread(target=draw_squares_w_threading, args=(tur,lockyLock))
+    t4 = threading.Thread(target=draw_triangles_w_threading, args=(tur,lockyLock))
 
-    t1 = threading.Thread(target=draw_circles, args=(tur,))
-    
     t1.start()
-    
-    t2 = threading.Thread(target=draw_rectangles, args=(tur,))
+
+
     t2.start()
     
-    t3 = threading.Thread(target=draw_squares, args=(tur,))
+
     t3.start()
     
-    t4 = threading.Thread(target=draw_triangles, args=(tur,))
-    t4.start()
 
+    t4.start()
+    
+
+    
+    
     t1.join()
     t2.join()
     t3.join()
