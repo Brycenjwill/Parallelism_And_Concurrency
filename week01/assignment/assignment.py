@@ -174,11 +174,12 @@ def run_with_threads(tur, log, main_turtle):
 
 
 
-    t1 = threading.Thread(target=drawcircle, args=(tur))
-    def drawcircle(tur):
-        draw_circles(tur)
-    t1.start()
+    t1 = threading.Thread(target=draw_circles, args=(tur))
     
+    t1.start()
+
+    t1.join()
+    draw_squares(tur)
     draw_triangles(tur)
     draw_rectangles(tur)
 
