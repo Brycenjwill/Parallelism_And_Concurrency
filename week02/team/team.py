@@ -10,6 +10,7 @@ Website is: http://deckofcardsapi.com
 Instructions:
 
 - Review instructions in I-Learn.
+n1kisstd7moh
 
 """
 
@@ -26,6 +27,8 @@ from cse251 import *
 
 class Request_thread(threading.Thread):
     # TODO - Add code to make an API call and return the results
+
+    
     # https://realpython.com/python-requests/
     pass
 
@@ -40,11 +43,15 @@ class Deck:
     def reshuffle(self):
         print('Reshuffle Deck')
         # TODO - add call to reshuffle
+        requests.get("https://deckofcardsapi.com/api/deck/n1kisstd7moh/shuffle/")
+        
 
 
     def draw_card(self):
         # TODO add call to get a card
-        pass
+        card = requests.get('https://deckofcardsapi.com/api/deck/n1kisstd7moh/draw/?count=2')
+        cardinfo = card.json()
+        return cardinfo
 
     def cards_remaining(self):
         return self.remaining
@@ -63,10 +70,11 @@ if __name__ == '__main__':
     #        team_get_deck_id.py program once. You can have
     #        multiple decks if you need them
 
-    deck_id = 'ENTER ID HERE'
-
+    deck_id = 'n1kisstd7moh'
+    
     # Testing Code >>>>>
     deck = Deck(deck_id)
+    
     for i in range(55):
         card = deck.draw_endless()
         print(f'card {i + 1}: {card}', flush=True)
