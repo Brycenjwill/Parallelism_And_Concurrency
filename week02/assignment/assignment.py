@@ -54,15 +54,33 @@ call_count = 0
 
 
 # TODO Add your threaded class definition here
+class Request_thread(threading.Thread):
+    def __init__(self):
+      threading.Thread.__init__(self)
+      self.url = TOP_API_URL
+      self.people = self.url + "/people/"
+          
+    def run(self):
+        response = requests.get(TOP_API_URL)
+        if response.status_code == 200:
+            self.response = response.json()
+        else:
+            print('RESPONSE = ', response.status_code)
 
+      
+    
 
 # TODO Add any functions you need here
-
+def getCharecters():
+    charecters = requests.get(TOP_API_URL)
+    print(charecters.content)
 
 def main():
     log = Log(show_terminal=True)
     log.start_timer('Starting to retrieve data from the server')
 
+    
+    getCharecters()
     # TODO Retrieve Top API urls
 
     # TODO Retireve Details on film 6
