@@ -49,9 +49,14 @@ class Deck:
 
     def draw_card(self):
         # TODO add call to get a card
-        card = requests.get('https://deckofcardsapi.com/api/deck/n1kisstd7moh/draw/?count=2')
-        cardinfo = card.json()
-        return cardinfo
+        card = requests.get('https://deckofcardsapi.com/api/deck/n1kisstd7moh/draw/?count=1')
+        card = card.content
+        cardpayload = json.loads(card)
+        value = [card["value"] for card in cardpayload["cards"]]
+        val = value[0]
+        suit = [card["suit"] for card in cardpayload["cards"]]
+        sweet = suit[0]
+        return val, sweet
 
     def cards_remaining(self):
         return self.remaining
@@ -77,7 +82,7 @@ if __name__ == '__main__':
     
     for i in range(55):
         card = deck.draw_endless()
-        print(f'card {i + 1}: {card}', flush=True)
+        print(f'card {i + 1}: {card[0]} : {card[1]}', flush=True)
     print()
     # <<<<<<<<<<<<<<<<<<
 
