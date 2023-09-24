@@ -55,70 +55,215 @@ call_count = 0
 
 # TODO Add your threaded class definition here
 class Request_thread(threading.Thread):
-    def __init__(self):
+    def __init__(self, urlList, iterator, startVal, ):
       threading.Thread.__init__(self)
-      self.url = TOP_API_URL
-      self.people = self.url + "/people/"
-          
+      self.urlList = urlList
+      self.iterator = iterator
+      self.startVal = startVal
+      self.returnList = []
+                
     def run(self):
-        response = requests.get(TOP_API_URL)
-        if response.status_code == 200:
-            self.response = response.json()
-        else:
-            print('RESPONSE = ', response.status_code)
+        working = True
+        while working == True:
+            if(self.startVal <= len(self.urlList)-1):
+                response = requests.get(self.urlList[self.startVal])
+                if response.status_code == 200:
+                    response = response.content
+                    self.response = json.loads(response)
+                    self.returnList.append(self.response["name"])
+                    self.startVal += self.iterator
+                    global call_count
+                    call_count += 1
+            else:
+                working = False
+            
 
-      
+    def getList(self):
+        return self.returnList
     
 
 # TODO Add any functions you need here
 def getAll():
+    global call_count
     all = requests.get(TOP_API_URL)
-    
+    call_count += 1
     all = all.content
     all = json.loads(all)
+    
     return all
 
-def getCharecters(all):
-    request = all["people"]
-    working = True
-    charecterList = []
-    i = 1
-    while(working == True):
-      if(i == 17):
-          i = 18
-      charecters = requests.get(f"{request}{i}")
-      
-      if(charecters.status_code == 404):
-          working = False
-      else:
-          charecters = charecters.content
-          charecters = json.loads(charecters)
-          if f"{TOP_API_URL}/films/6/" in charecters["films"]:
-              charecterList.append(charecters["name"])
-          i+= 1
-          
-    
-    return charecterList
-      
+def getFilm(all):
+    request = all["films"]
+    film = requests.get(f"{request}6")
+    film = film.content
+    film = json.loads(film)
+    return film
 
+def getCharecters(film,iterator, startVal):
+    global call_count
+    charecterList = []
+    charURLs = film["characters"]
+    charLen = range(len(charURLs))
+    i = iterator
+    while i < charLen:
+        payload = requests.get(f"{charURLs[i]}")
+        charecters = payload.content
+        charecters = json.loads(charecters)
+        charecterList.append(charecters['name'])
+        call_count += 1
+        i += iterator
+
+    return charecterList
+
+def getPlanets(film):
+    global call_count
+    planetList = []
+    planetURLs = film["planets"]
+    planetLen = range(len(planetURLs))
+    for i in planetLen:
+        payload = requests.get(f"{planetURLs[i]}")
+        planets = payload.content
+        planets = json.loads(planets)
+        planetList.append(planets["name"])
+        call_count += 1
+    return planetList
+
+def getStarships(film):
+    global call_count
+    shipList = []
+    shipURLs = film["starships"]
+    shipLen = range(len(shipURLs))
+    for i in shipLen:
+        payload = requests.get(f"{shipURLs[i]}")
+        ships = payload.content
+        ships = json.loads(ships)
+        shipList.append(ships["name"])
+        call_count += 1
+    return shipList
+
+def getVehicles(film):
+    global call_count
+    vehicleList = []
+    vehicleURLs = film["vehicles"]
+    vehicleLen = range(len(vehicleURLs))
+    for i in vehicleLen:
+        payload = requests.get(f"{vehicleURLs[i]}")
+        vehicles = payload.content
+        vehicles = json.loads(vehicles)
+        vehicleList.append(vehicles["name"])
+        call_count += 1
+    return vehicleList
+
+def getStarships(film):
+    global call_count
+    shipList = []
+    shipURLs = film["starships"]
+    shipLen = range(len(shipURLs))
+    for i in shipLen:
+        payload = requests.get(f"{shipURLs[i]}")
+        ships = payload.content
+        ships = json.loads(ships)
+        shipList.append(ships["name"])
+        call_count += 1
+    return shipList
+
+def getSpecies(film):
+    global call_count
+    speciesList = []
+    speciesURLs = film["species"]
+    speciesLen = range(len(speciesURLs))
+    for i in speciesLen:
+        payload = requests.get(f"{speciesURLs[i]}")
+        speciess = payload.content
+        speciess = json.loads(speciess)
+        speciesList.append(speciess["name"])
+        call_count += 1
+    return speciesList
 
 def main():
     log = Log(show_terminal=True)
     log.start_timer('Starting to retrieve data from the server')
 
     
-    all = getAll()
-    charecters = getCharecters(all)
-    print(f"Charecters: {len(charecters)}\n {charecters}")
+    
+    
+    
     # TODO Retrieve Top API urls
+    all = getAll()
 
     # TODO Retireve Details on film 6
+    film = getFilm(all)
+    Title = film["title"]
+    Director = film["director"]
+    Producer = film["producer"]
+    Released = film["release_date"]
 
+    char1 = Request_thread(film["characters"], 4, 0)
+    char2 = Request_thread(film["characters"], 4, 1)
+    
+    plan1 = Request_thread(film["planets"], 4, 0)
+    plan2 = Request_thread(film["planets"], 4, 0)
+    char1.start()
+    char2.start()
+    
+    plan1.start()
+    plan2.start()
+
+    char1.join()
+    char2.join()
+
+    plan1.join()
+    plan2.join()
+    
+    Charecters = char1.getList() + char2.getList() 
+    Planets = plan1.getList() + plan2.getList()
+
+    #Charecters = getCharecters(film)
+    Charecters.sort()
+    Planets.sort()
+
+    
+    Ships = getStarships(film)
+    Ships.sort()
+    vehicles = getVehicles(film)
+    vehicles.sort()
+    species = getSpecies(film)
+    species.sort()
+
+    charString = ",".join(str(e) for e in Charecters)    
+    planetString = ",".join(str(e) for e in Planets)
+    shipString = ",".join(str(e) for e in Ships)
+    vehicleString = ",".join(str(e) for e in vehicles)
+    speciesString = ",".join(str(e) for e in species)
     # TODO Display results
 
+    
+
+
+    
+    log.write("----------------------------------------")
+    log.write(f"Title: {Title}")
+    log.write(f"Directer: {Director}")
+    log.write(f"Producer: {Producer}")
+    log.write(f"Released: {Released}")
+    log.write()
+    log.write(f"Characters: {len(Charecters)}")
+    log.write(charString)
+    log.write()
+    log.write(f"Planets: {len(Planets)}")
+    log.write(planetString)
+    log.write()
+    log.write(f"Starships: {len(Ships)}")
+    log.write(shipString)
+    log.write()
+    log.write(f"Vehicles: {len(vehicles)}")
+    log.write(vehicleString)
+    log.write()
+    log.write(f"Species: {len(species)}")
+    log.write(speciesString)
+    log.write()
     log.stop_timer('Total Time To complete')
     log.write(f'There were {call_count} calls to the server')
-    
 
 if __name__ == "__main__":
     main()
