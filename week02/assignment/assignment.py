@@ -55,7 +55,7 @@ call_count = 0
 
 # TODO Add your threaded class definition here
 class Request_thread(threading.Thread):
-    def __init__(self, urlList, iterator, startVal, ):
+    def __init__(self, urlList, iterator, startVal):
       threading.Thread.__init__(self)
       self.urlList = urlList
       self.iterator = iterator
