@@ -71,16 +71,45 @@ class Request_thread(threading.Thread):
     
 
 # TODO Add any functions you need here
-def getCharecters():
-    charecters = requests.get(TOP_API_URL)
-    print(charecters.content)
+def getAll():
+    all = requests.get(TOP_API_URL)
+    
+    all = all.content
+    all = json.loads(all)
+    return all
+
+def getCharecters(all):
+    request = all["people"]
+    working = True
+    charecterList = []
+    i = 1
+    while(working == True):
+      if(i == 17):
+          i = 18
+      charecters = requests.get(f"{request}{i}")
+      
+      if(charecters.status_code == 404):
+          working = False
+      else:
+          charecters = charecters.content
+          charecters = json.loads(charecters)
+          if f"{TOP_API_URL}/films/6/" in charecters["films"]:
+              charecterList.append(charecters["name"])
+          i+= 1
+          
+    
+    return charecterList
+      
+
 
 def main():
     log = Log(show_terminal=True)
     log.start_timer('Starting to retrieve data from the server')
 
     
-    getCharecters()
+    all = getAll()
+    charecters = getCharecters(all)
+    print(f"Charecters: {len(charecters)}\n {charecters}")
     # TODO Retrieve Top API urls
 
     # TODO Retireve Details on film 6
