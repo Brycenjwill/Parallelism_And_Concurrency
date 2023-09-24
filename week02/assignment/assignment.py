@@ -97,88 +97,9 @@ def getFilm(all):
     film = requests.get(f"{request}6")
     film = film.content
     film = json.loads(film)
+    global call_count
+    call_count += 1
     return film
-
-def getCharecters(film,iterator, startVal):
-    global call_count
-    charecterList = []
-    charURLs = film["characters"]
-    charLen = range(len(charURLs))
-    i = iterator
-    while i < charLen:
-        payload = requests.get(f"{charURLs[i]}")
-        charecters = payload.content
-        charecters = json.loads(charecters)
-        charecterList.append(charecters['name'])
-        call_count += 1
-        i += iterator
-
-    return charecterList
-
-def getPlanets(film):
-    global call_count
-    planetList = []
-    planetURLs = film["planets"]
-    planetLen = range(len(planetURLs))
-    for i in planetLen:
-        payload = requests.get(f"{planetURLs[i]}")
-        planets = payload.content
-        planets = json.loads(planets)
-        planetList.append(planets["name"])
-        call_count += 1
-    return planetList
-
-def getStarships(film):
-    global call_count
-    shipList = []
-    shipURLs = film["starships"]
-    shipLen = range(len(shipURLs))
-    for i in shipLen:
-        payload = requests.get(f"{shipURLs[i]}")
-        ships = payload.content
-        ships = json.loads(ships)
-        shipList.append(ships["name"])
-        call_count += 1
-    return shipList
-
-def getVehicles(film):
-    global call_count
-    vehicleList = []
-    vehicleURLs = film["vehicles"]
-    vehicleLen = range(len(vehicleURLs))
-    for i in vehicleLen:
-        payload = requests.get(f"{vehicleURLs[i]}")
-        vehicles = payload.content
-        vehicles = json.loads(vehicles)
-        vehicleList.append(vehicles["name"])
-        call_count += 1
-    return vehicleList
-
-def getStarships(film):
-    global call_count
-    shipList = []
-    shipURLs = film["starships"]
-    shipLen = range(len(shipURLs))
-    for i in shipLen:
-        payload = requests.get(f"{shipURLs[i]}")
-        ships = payload.content
-        ships = json.loads(ships)
-        shipList.append(ships["name"])
-        call_count += 1
-    return shipList
-
-def getSpecies(film):
-    global call_count
-    speciesList = []
-    speciesURLs = film["species"]
-    speciesLen = range(len(speciesURLs))
-    for i in speciesLen:
-        payload = requests.get(f"{speciesURLs[i]}")
-        speciess = payload.content
-        speciess = json.loads(speciess)
-        speciesList.append(speciess["name"])
-        call_count += 1
-    return speciesList
 
 def main():
     log = Log(show_terminal=True)
@@ -198,36 +119,74 @@ def main():
     Producer = film["producer"]
     Released = film["release_date"]
 
-    char1 = Request_thread(film["characters"], 4, 0)
-    char2 = Request_thread(film["characters"], 4, 1)
+    char1 = Request_thread(film["characters"], 5, 0)
+    char2 = Request_thread(film["characters"], 5, 1)
+    char3 = Request_thread(film["characters"], 5, 2)
+    char4 = Request_thread(film["characters"], 5, 3)
+    char5 = Request_thread(film["characters"], 5, 4)
     
-    plan1 = Request_thread(film["planets"], 4, 0)
-    plan2 = Request_thread(film["planets"], 4, 0)
+    plan1 = Request_thread(film["planets"], 2, 0)
+    plan2 = Request_thread(film["planets"], 2, 1)
+
+    ship1 = Request_thread(film["starships"], 2, 0)
+    ship2 = Request_thread(film["starships"], 2, 1)
+
+    vehicle1 = Request_thread(film["vehicles"], 2, 0)
+    vehicle2 = Request_thread(film["vehicles"], 2, 1)
+
+    species1 = Request_thread(film["species"], 3, 0)
+    species2 = Request_thread(film["species"], 3, 1)
+    species3 = Request_thread(film["species"], 3, 2)
+
+    #Start all
     char1.start()
     char2.start()
-    
+    char3.start()
+    char4.start() 
+    char5.start()
+
     plan1.start()
     plan2.start()
 
+    ship1.start()
+    ship2.start()
+
+    vehicle1.start()
+    vehicle2.start()
+
+    species1.start()
+    species2.start()
+    species3.start()
+    #Join all
     char1.join()
     char2.join()
+    char3.join()
+    char4.join()
+    char5.join()
 
     plan1.join()
     plan2.join()
     
-    Charecters = char1.getList() + char2.getList() 
-    Planets = plan1.getList() + plan2.getList()
+    ship1.join()
+    ship2.join()
 
-    #Charecters = getCharecters(film)
+    vehicle2.join()
+    vehicle2.join()
+
+    species1.join()
+    species2.join()
+    species3.join()
+
+    Charecters = char1.getList() + char2.getList() + char3.getList() + char4.getList() + char5.getList()
+    Planets = plan1.getList() + plan2.getList()
+    Ships = ship1.getList() + ship2.getList()
+    vehicles = vehicle1.getList() + vehicle2.getList()
+    species = species1.getList() + species2.getList() + species3.getList()
+
     Charecters.sort()
     Planets.sort()
-
-    
-    Ships = getStarships(film)
     Ships.sort()
-    vehicles = getVehicles(film)
     vehicles.sort()
-    species = getSpecies(film)
     species.sort()
 
     charString = ",".join(str(e) for e in Charecters)    
