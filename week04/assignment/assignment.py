@@ -55,6 +55,7 @@ class Car():
            
     def display(self):
         print(f'{self.make} {self.model}, {self.year}')
+        
 
 
 class Queue251():
@@ -109,7 +110,7 @@ class Factory(threading.Thread):
                     self.queue.put(car)
                     self.sem.release()
                     on = False
-                    print(i+1)
+                    
         self.done = True
             
     def returnQueue(self):
@@ -168,7 +169,7 @@ def main():
     # TODO Create queue251 
     queue = Queue251()
     
-    # TODO Create lock(s) ?
+    # TODO Create lock(s) ? Nope, I don't think I will
 
     # This tracks the length of the car queue during receiving cars by the dealership
     # i.e., update this list each time the dealer receives a car
