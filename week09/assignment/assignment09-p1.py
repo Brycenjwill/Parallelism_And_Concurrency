@@ -28,13 +28,32 @@ speed = SLOW_SPEED
 
 # TODO add any functions
 
-def solve_path(maze):
+
+
+def solve_path(maze, Path, pos, tempPath, forks):
     """ Solve the maze and return the path found between the start and end positions.  
         The path is a list of positions, (x, y) """
         
     # TODO start add code here
-    path = []
-    return path
+    possibleMoves = maze.get_possible_moves(pos[0], pos[1])
+    if maze.at_end(pos[0], pos[1]) == False:
+        if len(possibleMoves) == 1:
+            maze.move(possibleMoves[0][0], possibleMoves[0][1], (0,255,0))
+            tempPath.append([possibleMoves[0][0], possibleMoves[0][1]])
+            solve_path(maze, Path, [possibleMoves[0][0], possibleMoves[0][1]], tempPath, forks)
+        elif len(possibleMoves) > 1:
+            Path.append(tempPath)
+            tempPath = pos
+            solve_path(maze, Path, [possibleMoves[0][0], possibleMoves[0][1]], tempPath, forks)       
+        else:
+            solve_path(maze, Path, tempPath[0], tempPath, forks)      
+    return Path
+    
+
+
+
+
+
 
 
 def get_path(log, filename):
@@ -48,7 +67,7 @@ def get_path(log, filename):
 
     maze = Maze(screen, SCREEN_SIZE, SCREEN_SIZE, filename)
 
-    path = solve_path(maze)
+    path = solve_path(maze, [], [0,1], [], [])
 
     log.write(f'Number of drawing commands for = {screen.get_command_count()}')
 
