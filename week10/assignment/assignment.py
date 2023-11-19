@@ -60,10 +60,41 @@ Add any comments for me:
 import random
 from multiprocessing.managers import SharedMemoryManager
 import multiprocessing as mp
+import threading
+import time
 
 BUFFER_SIZE = 10
 READERS = 2
 WRITERS = 2
+
+def write(shared, sem, to_send):
+    sending = 1 #Initialize value to send first
+    i = 0 #Initialize the current buffer index
+    while sending <= to_send:
+        #Write to the buffer as long as current pos has been read
+        #Or current pos is uninitialized. 
+        sem.acquire() #Check that there is space to write
+        #1 Write number to buffer location
+        shared[i] = sending
+
+
+
+def read(shared, sem):
+    #Read from buffer until the write process sends message to end
+    #Print what is read
+    going = True
+    i = 0
+    time.sleep(2) #Sleep initially to give write space to work
+    while going == True:
+        print(shared[i], end=', ', flush=True)
+        sem.release() #Release semaphore, telling writer that buffer item
+        #has been read
+        i += 1 #Move i up
+
+
+
+
+
 
 def main():
 
@@ -83,13 +114,21 @@ def main():
     #        You can add another value to the sharedable list to keep
     #        track of the number of values received by the readers.
     #        (ie., [0] * (BUFFER_SIZE + 4))
-
+    shared = smm.ShareableList([0]*(BUFFER_SIZE + 4))
     # TODO - Create any lock(s) or semaphore(s) that you feel you need
+    sem = threading.Semaphore(BUFFER_SIZE) 
 
     # TODO - create reader and writer processes
+    writer = mp.Process(target=write, args = (shared, sem, items_to_send))
+    reader = mp.Process(target=read, args=(shared,sem))
 
     # TODO - Start the processes and wait for them to finish
+    writer.start()
+    reader.start()
+    
 
+    writer.join()
+    reader.join()
     print(f'{items_to_send} values sent')
 
     # TODO - Display the number of numbers/items received by the reader.
