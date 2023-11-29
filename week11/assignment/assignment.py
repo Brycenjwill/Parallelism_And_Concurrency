@@ -102,7 +102,6 @@ def guest(lightLock, cleanLock, startTime, partyCount, guestCount, id):
                 partyCount.value += 1
                 cleanLock.release()
                 guest_partying(id, 1)
-                time.sleep(2)
                 cleanLock.acquire()
                 if guestCount.value != 1:
                     guestCount.value -= 1
