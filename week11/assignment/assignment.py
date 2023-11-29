@@ -35,15 +35,8 @@ def guest_partying(id, count):
     print(f'Guest: {id}, count = {count}')
     time.sleep(random.uniform(0, 1))
 
-def cleaner(lightLock, cleanLock, startTime, cleanedCountQueue, id):
-    """
-    do the following for TIME seconds
-        cleaner will wait to try to clean the room (cleaner_waiting())
-        get access to the room
-        display message STARTING_CLEANING_MESSAGE
-        Take some time cleaning (cleaner_cleaning())
-        display message STOPPING_CLEANING_MESSAGE
-    """
+def cleaner(lightLock, cleanLock, startTime, cleanedCount, id):
+    cleanedCount.value = 0
     """
     while time <= start_time + TIME
     try to enter room 
@@ -59,30 +52,23 @@ def cleaner(lightLock, cleanLock, startTime, cleanedCountQueue, id):
     cleaners will each return their clean_count variable
     """
 
-    while time.time() < startTime + 10:
-
+    while time.time() < startTime + TIME:
         cleaner_waiting()
-        if random.randint(0,1) == 1:
-            lightLock.acquire() #Make sure no party is going on
+        if lightLock.acquire(block=False) == True: #Make sure no party is going on
             cleanLock.acquire() #Don't let party goers in
             print(STARTING_CLEANING_MESSAGE)
             cleaner_cleaning(id)
             print(STOPPING_CLEANING_MESSAGE)
             lightLock.release() #Let another person in 
             cleanLock.release() #Let party start if thats what happens next
-            cleanedCountQueue.put(1) #Add one to cleaned count
+            cleanedCount.value =+ 1 #Add one to cleaned count
+        else:
+            pass
 
 
-def guest(lightLock, cleanLock, startTime, partyCountQueue, guestsCountQueue, id):
+def guest(lightLock, cleanLock, startTime, partyCount, guestCount, id):
 
-    """
-    do the following for TIME seconds
-        guest will wait to try to get access to the room (guest_waiting())
-        get access to the room
-        display message STARTING_PARTY_MESSAGE if this guest is the first one in the room
-        Take some time partying (call guest_partying())
-        display message STOPPING_PARTY_MESSAGE if the guest is the last one leaving in the room
-    """
+
     """
     while time <= start_time + TIME
     Try to enter room
@@ -95,40 +81,44 @@ def guest(lightLock, cleanLock, startTime, partyCountQueue, guestsCountQueue, id
     If guest is the last to leave, release light lock. Last guest displays STOPPING_PARTY_MESSAGE
     guests will each return their party_count variables.
     """
-    while time.time() < startTime + 10:
-        count = 0
+    while time.time() < startTime + TIME:
         guest_waiting()
+        if guestCount.value > 0:
+            guestCount.value += 1
+            guest_partying(id, guestCount.value)
+            guestCount.value -= 1
+            if guestCount.value == 0:
+                print(STOPPING_PARTY_MESSAGE)
+                lightLock.release()
+                guestCount.value = 0
+                break
+        elif id == 1:
+            print("Trying to party")
+            print(STARTING_PARTY_MESSAGE)
+            guestCount.value = 1
+            partyCount.value += 1
+            guest_partying(id, 1)
+            time.sleep(2)
+            guestCount.value -= 1
+        elif lightLock.acquire(block=False) == False:
+            guestCount.value = 2
+            print(STOPPING_PARTY_MESSAGE)
+            lightLock.release()
+            guestCount.value = 0
+            break
 
-        if random.randint(0,1) == 1: #Try to join party that is ongoing
-            cleanLock.acquire()
-            cleanLock.release()
-            count = partyCountQueue.get() + 1 #Add one to the count of people in the party
-            guest_partying(id, count) #Show that another guest is partyinh
-            partyCountQueue.put(count)
-
-            #If this is the only guet at this point, end party
 
 
-        else:
-            break #Reset loop if num was 0, so that not everyone is trying to join rather than start party when its time
-                #to start the party again
-    else:
-        lightLock.acquire() #Start party!
-        print(STARTING_PARTY_MESSAGE)
+            
 
-        partyCountQueue.put(1) #Add one to the number of people in the party
-        count = partyCountQueue.get()
-        partyCountQueue.put(count) 
-        guest_partying(id, count)
-        partyCountQueue.put(1) #Add one to the amount of parties that have happened
-        #leave party after partying, by doing nothing here. Then wait again to rejoin. 
+
     
 def main():
     # Start time of the running of the program. 
     start_time = time.time()
-    cleanedCountQueue = mp.Queue()
-    partyCountQueue = mp.Queue()
-    guestsCountQueue = mp.Queue()
+    cleanedCount = mp.Value('i', 0)
+    partyCount = mp.Value('i', 0)
+    guestCount = mp.Value('i', 0)
 
     # TODO - add any variables, data structures, processes you need
     lightLock = mp.Lock() #A lock that is used to tell if anyone is in the room at all, if only this lock is acquired then
@@ -137,19 +127,19 @@ def main():
     # TODO - add any arguments to cleaner() and guest() that you need
 
     #Cleaner Processess
-    cleaner1 = mp.Process(target=cleaner, args=(lightLock, cleanLock, start_time, cleanedCountQueue, 1))
-    cleaner2 = mp.Process(target=cleaner, args=(lightLock, cleanLock, start_time, cleanedCountQueue, 2))
+    cleaner1 = mp.Process(target=cleaner, args=(lightLock, cleanLock, start_time, cleanedCount, 1))
+    cleaner2 = mp.Process(target=cleaner, args=(lightLock, cleanLock, start_time, cleanedCount, 2))
 
-    guest1 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCountQueue, guestsCountQueue, 1))
-    guest2 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCountQueue, guestsCountQueue, 2))
-    guest3 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCountQueue, guestsCountQueue, 3))
-    guest4 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCountQueue, guestsCountQueue, 4))
-    guest5 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCountQueue, guestsCountQueue, 5))
+    guest1 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCount, guestCount, 1))
+    guest2 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCount, guestCount, 2))
+    guest3 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCount, guestCount, 3))
+    guest4 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCount, guestCount, 4))
+    guest5 = mp.Process(target=guest, args=(lightLock, cleanLock, start_time, partyCount, guestCount, 5))
 
-    
+
     cleaner1.start()
     cleaner2.start()
-
+ 
     guest1.start()
     guest2.start()
     guest3.start()
@@ -157,22 +147,22 @@ def main():
     guest5.start()
 
 
+    while time.time() < start_time + TIME:
+        pass
+    print("Time out")
+
     cleaner1.join()
     cleaner2.join()
 
     guest1.join()
-    guest2.start()
-    guest3.start()
-    guest4.start()
-    guest5.start()
+    guest2.join()
+    guest3.join()
+    guest4.join()
+    guest5.join()
 
-    cleaned_count = 0 
-    while not cleanedCountQueue.empty(): #Grab all ones from cleanCountQueue
-        cleaned_count += cleanedCountQueue.get()
+    cleaned_count = guestCount.value
 
-    party_count = 0
-    while not partyCountQueue.empty(): #Grab all ones from partyCountQueue
-        party_count += partyCountQueue.get()
+    party_count = partyCount.value
 
     #Set cleaned count equal to the returned values of cleaners, gotten from queue
     #Set party count equal to the returned values of party count, gotten from queue
