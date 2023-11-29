@@ -93,6 +93,7 @@ class Board():
                       ['F', 'R', 'O', 'N', 'G', 'A', 'A', 'A', 'A', 'C', 'C', 'P', 'V', 'R', 'K', 'D', 'U', 'A', 'I', 'A', 'R', 'D', 'Z', 'E', 'D'], 
                       ['D', 'C', 'D', 'V', 'A', 'Z', 'N', 'G', 'S', 'O', 'L', 'D', 'I', 'E', 'I', 'I', 'D', 'S', 'S', 'F', 'C', 'N', 'U', 'A', 'I']]
 
+    
 
     def highlight(self, row, col, on=True):
         """ Turn on/off highlighting for a letter """
@@ -122,7 +123,7 @@ class Board():
     def _word_at_this_location(self, row, col, direction, word):
         """ Helper function: is the word found on the board at (x, y) in a direction """
         dir_x, dir_y = self.directions[direction]
-        highlight_copy = copy.deepcopy(self.highlighting)
+        
         for letter in word:
             board_letter = self.get_letter(row, col)
             if board_letter == letter:
@@ -130,7 +131,7 @@ class Board():
                 row += dir_x
                 col += dir_y
             else:
-                self.highlighting = copy.deepcopy(highlight_copy)
+                
                 return False
         return True
 
@@ -148,7 +149,6 @@ class Board():
 def main():
     board = Board()
     board.display()
-
     start = time.perf_counter()
     for word in words:
         if not board.find_word(word):

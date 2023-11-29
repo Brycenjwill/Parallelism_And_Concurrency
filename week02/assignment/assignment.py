@@ -76,7 +76,6 @@ class Request_thread(threading.Thread):
                     call_count += 1
             else:
                 working = False
-            
 
     def getList(self):
         return self.returnList

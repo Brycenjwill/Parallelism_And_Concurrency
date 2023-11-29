@@ -38,7 +38,7 @@ def retrieve_thread():  # TODO add arguments
 
 
 
-def file_reader(): # TODO add arguments
+def file_reader(filename,log): # TODO add arguments
     """ This thread reading the data file and places the values in the data_queue """
 
     # TODO Open the data file "urls.txt" and place items into a queue
@@ -53,13 +53,15 @@ def main():
     """ Main function """
 
     log = Log(show_terminal=True)
+    filename = "urls.text"
 
     # TODO create queue
+    queue = queue.Queue()
     # TODO create semaphore (if needed)
 
     # TODO create the threads. 1 filereader() and RETRIEVE_THREADS retrieve_thread()s
     # Pass any arguments to these thread need to do their job
-
+    file_reader(filename, log)
     log.start_timer()
 
     # TODO Get them going - start the retrieve_threads first, then file_reader

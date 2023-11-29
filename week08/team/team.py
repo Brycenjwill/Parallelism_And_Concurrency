@@ -13,7 +13,7 @@ import multiprocessing as mp
 
 # Include cse 251 common Python files - Dont change
 from cse251 import *
-
+threads = []
 # -----------------------------------------------------------------------------
 # Python program for implementation of MergeSort
 # https://www.geeksforgeeks.org/merge-sort/
@@ -74,7 +74,49 @@ def merge_normal(arr):
 def merge_sort_thread(arr):
     # TODO - Add your code here to use threads.  Each time the merge algorithm does a recursive
     #        call, you need to create a thread to handle that call
-    pass
+        # base case of the recursion - must have at least 2+ items
+    if len(arr) > 1:
+ 
+         # Finding the mid of the array
+        mid = len(arr) // 2
+ 
+        # Dividing the array elements
+        L = arr[:mid]
+        
+        # into 2 halves
+        R = arr[mid:]
+ 
+        # Sorting the first half
+        Thread1 = threading.Thread(target = merge_sort_thread, args=(L,))
+        Thread1.start()
+        threads.append(Thread1)
+        # Sorting the second half
+        Thread2 = threading.Thread(target = merge_sort_thread, args=(R,))
+        Thread2.start()
+        threads.append(Thread2)
+        i = j = k = 0
+ 
+        # Copy data to temp arrays L[] and R[]
+        while i < len(L) and j < len(R):
+            if L[i] < R[j]:
+                arr[k] = L[i]
+                i += 1
+            else:
+                arr[k] = R[j]
+                j += 1
+            k += 1
+ 
+        # Checking if any element was left
+        while i < len(L):
+            arr[k] = L[i]
+            i += 1
+            k += 1
+ 
+        while j < len(R):
+            arr[k] = R[j]
+            j += 1
+            k += 1
+    
 
 
 # -----------------------------------------------------------------------------
@@ -101,7 +143,10 @@ def main():
         start_time = time.perf_counter()
 
         merge_function(arr)
-
+        if merge_function == merge_sort_thread:
+            for thread in threads:
+                print(thread)
+                thread.join()
         end_time = time.perf_counter()
         print(f'Sorted: {str(arr[:5])[1:-1]} ... {str(arr[-5:])[1:-1]}')
 
