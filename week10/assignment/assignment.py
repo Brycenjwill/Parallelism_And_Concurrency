@@ -60,7 +60,6 @@ Add any comments for me:
 import random
 from multiprocessing.managers import SharedMemoryManager
 import multiprocessing as mp
-import threading
 import time
 
 BUFFER_SIZE = 10
@@ -68,33 +67,35 @@ READERS = 2
 WRITERS = 2
 
 def write(shared, sem, to_send):
-    sending = 1 #Initialize value to send first
     i = 0 #Initialize the current buffer index
-    while sending <= to_send:
+    while shared[BUFFER_SIZE+1] <= to_send:
         #Write to the buffer as long as current pos has been read
         #Or current pos is uninitialized. 
         sem.acquire() #Check that there is space to write
         #1 Write number to buffer location
-        shared[i] = sending
-
-
+        shared[i] = shared[BUFFER_SIZE+1]
+        shared[BUFFER_SIZE+1] += 1 #Add one to current sending counter
+        i += 1
+        if i == BUFFER_SIZE:
+            i = 0
+    shared[BUFFER_SIZE + 2] = 1 #Tell reader that writer is done writing
 
 def read(shared, sem):
     #Read from buffer until the write process sends message to end
     #Print what is read
-    going = True
     i = 0
     time.sleep(2) #Sleep initially to give write space to work
-    while going == True:
-        print(shared[i], end=', ', flush=True)
+    while shared[BUFFER_SIZE+4] < BUFFER_SIZE: 
         sem.release() #Release semaphore, telling writer that buffer item
         #has been read
+        print(shared[i], end=', ', flush=True)
+        shared[BUFFER_SIZE+3] += 1 #Add one to read counter
         i += 1 #Move i up
-
-
-
-
-
+        if i == BUFFER_SIZE:
+            i = 0
+        
+        if shared[BUFFER_SIZE+2] != 0: #Check if writer is done
+          shared[BUFFER_SIZE+4]+= 1
 
 def main():
 
@@ -114,28 +115,30 @@ def main():
     #        You can add another value to the sharedable list to keep
     #        track of the number of values received by the readers.
     #        (ie., [0] * (BUFFER_SIZE + 4))
-    shared = smm.ShareableList([0]*(BUFFER_SIZE + 4))
+    shared = smm.ShareableList([0]*(BUFFER_SIZE + 5))
+    #print(shared)
     # TODO - Create any lock(s) or semaphore(s) that you feel you need
-    sem = threading.Semaphore(BUFFER_SIZE) 
+    sem = mp.Semaphore(BUFFER_SIZE) 
 
     # TODO - create reader and writer processes
     writer = mp.Process(target=write, args = (shared, sem, items_to_send))
-    reader = mp.Process(target=read, args=(shared,sem))
+    reader = mp.Process(target=read, args=(shared, sem))
 
     # TODO - Start the processes and wait for them to finish
-    writer.start()
     reader.start()
-    
-
+    writer.start()
+  
     writer.join()
     reader.join()
+
+    print("") #I added this to clean up the ouput a bit
     print(f'{items_to_send} values sent')
 
     # TODO - Display the number of numbers/items received by the reader.
     #        Can not use "items_to_send", must be a value collected
     #        by the reader processes.
     # print(f'{<your variable>} values received')
-
+    print(f'{shared[BUFFER_SIZE + 3]} values received')
     smm.shutdown()
 
 
